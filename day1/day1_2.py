@@ -26,7 +26,7 @@ for number in right_numbers:
 
 answer=0
 
-for number in left_numbers:
+for number in left_numbers:asdfs
     if number in right_counts:
         answer = answer + (number * right_counts[number])
 
