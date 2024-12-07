@@ -1,15 +1,23 @@
+from tqdm import tqdm
+from tqdm.contrib import itertools
+
 class Day6Map:
     def __init__(self, lines):
         self.position = (None, None, None)
         self.height = len(lines)
         self.width = len(lines[0])
-        self.obstacles = []
+        self.obstacles = set()
         for i, line in enumerate(lines):
             for j, char in enumerate(line):
                 if char == '#':
-                    self.obstacles.append((i, j))
+                    self.obstacles.add((i, j))
                 if char == "^" or char == "v" or char == "<" or char == ">":
                     self.position = (i, j, char)
+        self.visited = set()
+        self.start_position = self.position
+
+    def reset(self):
+        self.position = self.start_position
         self.visited = set()
 
     def is_loop(self):
@@ -67,21 +75,22 @@ map = Day6Map(lines)
 start_position = map.position
 
 loop_count = 0
-for i in range(map.height):
-    for j in range(map.width):
-        print(f"{i}, {j}")
-        if (i, j) != (start_position[0], start_position[1]) and (i, j) not in map.obstacles:
-            map.obstacles.append((i, j))
+
+first_run_is_loop = map.is_loop()
+
+obstacles_to_add = set()
+for position in map.visited:
+    obstacles_to_add.add((position[0], position[1]))
+map.reset()
+
+if not first_run_is_loop:
+    for obstacle in tqdm(obstacles_to_add):
+        if (obstacle[0], obstacle[1]) != (start_position[0], start_position[1]) and (obstacle[0], obstacle[1]) not in map.obstacles:
+            map.obstacles.add((obstacle[0], obstacle[1]))
             if map.is_loop():
                 loop_count += 1
-            map.obstacles.remove((i, j))
-            map.position = start_position
-            map.visited = set()
+            map.obstacles.remove((obstacle[0], obstacle[1]))
+            map.reset()
 
-# map.obstacles.append((6, 3))
-# if map.is_loop():
-#     loop_count += 1
-# map.obstacles.remove((6, 3))
-# map.position = start_position
 print(loop_count)
 
