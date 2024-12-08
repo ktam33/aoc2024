@@ -27,8 +27,8 @@ for i, total in (enumerate(tqdm(answers))):
             elif operators[j] == '*':
                 total *= next_num
             elif operators[j] == '||':
-                # total = int(str(total) + str(numbers[i][j + 1]))
-                total = total * (10 ** (int(math.log10(next_num)) + 1)) + next_num
+                total = int(str(total) + str(numbers[i][j + 1]))
+                # total = total * (10 ** (int(math.log10(next_num)) + 1)) + next_num
         if total == answers[i]:
             result += total
             break
