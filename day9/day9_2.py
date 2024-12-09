@@ -2,7 +2,6 @@ from tqdm import tqdm
 import itertools
 
 
-
 # Read file contents into a list called lines
 with open('input.txt', 'r') as file:
     lines = [line for line in file]
@@ -48,11 +47,40 @@ for file in reversed(initial_files):
             free_blocks.insert(free_block_index, remaining_block)
         for j in range(file[1]):
             disk[free_block[1] + j] = file[0]
-            disk[file[2] + j] = None 
-           
+            disk[file[2] + j] = None
+
+        # this next part where we update the free block list to reflect the file we moved
+        # is not really necessary to solve the problem
+
+        # if moved file is ahead of all free blocks, just add the new free block
+        if file[2] < free_blocks[0][1]:
+            free_blocks.insert(0, (file[1], file[2], file[3]))
+        else:
+            # loop through the free blocks from the end and see where the new free block should be added
+            for j in range(len(free_blocks) - 1, -1, -1):
+                current_free_block = free_blocks[j]
+                next_block_index = j + 1
+                if free_blocks[j][2] < file[2]:
+                    # if we need to merge with the previous free block, do that
+                    if current_free_block[2] == file[2] - 1:
+                        free_blocks[j] = (current_free_block[0] + file[1], current_free_block[1], current_free_block[2] + file[1])
+                    # else add a new free block and keep track of where we are
+                    else:
+                        free_blocks.insert(j + 1, (file[1], file[2], file[3]))
+                        next_block_index += 1
+                    # check if we need to merge with the next free block
+                    if next_block_index < len(free_blocks) and free_blocks[next_block_index][1] == file[3] + 1:
+                        modified_block = free_blocks[next_block_index - 1]
+                        next_block = free_blocks[next_block_index]
+                        free_blocks[next_block_index - 1] = (modified_block[0] + next_block[0], modified_block[1], next_block[2])
+                        del free_blocks[next_block_index]
+                    # no need to keep looping if we have already handled the new free block
+                    break
+
 answer = 0
 for i, block in enumerate(disk):
     if block != None:
         answer += i * block
 
+print(free_blocks)
 print(answer)
