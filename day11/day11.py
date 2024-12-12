@@ -21,7 +21,7 @@ def blink(stones, iteration, l):
             i += 1
             pbar.update(1)
 
-for i in range(75):
+for i in range(25):
     blink(stones, i, len(stones))
 
 print(len(stones))

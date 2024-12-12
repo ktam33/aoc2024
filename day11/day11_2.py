@@ -1,4 +1,20 @@
 from tqdm import tqdm
+import functools
+import math
+import time
+
+@functools.cache
+def first_n_digits(num, n):
+    return int(num // 10 ** (int(math.log10(num)) - n + 1))
+
+@functools.cache
+def last_n_digits(num, n):
+    return int(num % (10 ** n))
+
+@functools.cache
+def get_num_digits(num):
+    return int(math.log10(num))+1
+
 
 
 class Stone():
@@ -6,41 +22,45 @@ class Stone():
         self.value = value
         self.next = None
 
-def blink(first_stone, iteration, l):
-    with tqdm(total = l) as pbar:
-        pbar.set_description(f'Processing iteration {iteration}')
-        curr_stone = first_stone
-        while curr_stone != None:
-            next_stone = curr_stone.next
-            if curr_stone.value == "0":
-                curr_stone.value = "1"
-            elif len(curr_stone.value) % 2 == 0:
-                midpoint = int(len(curr_stone.value)/2)
-                curr_stone.next = Stone(str(int(curr_stone.value[midpoint:])))
-                curr_stone.next.next = next_stone
-                curr_stone.value = str(int(curr_stone.value[:midpoint]))
-                all_stones.append(new_stone)
-            else:
-                curr_stone.value = str(int(curr_stone.value) * 2024)
-            curr_stone = next_stone
-            pbar.update(1)
+def add_to_nums(nums, key, value):
+    if key not in nums:
+        nums[key] = 0
+    nums[key] += value
 
-input = "8435 234 928434 14 0 7 92446 8992692"
-# input = "125 17"
-stones = input.split(" ")
+def blink(nums):
+    new_nums = {}
+    for num in nums:
+        if num == 0:
+            add_to_nums(new_nums, 1, nums[num])
+        elif get_num_digits(num) % 2 == 0:
+            midpoint = get_num_digits(num)/2
+            left = first_n_digits(num, midpoint)
+            right = last_n_digits(num, midpoint)
+            add_to_nums(new_nums, left, nums[num])
+            add_to_nums(new_nums, right, nums[num])
+        else:
+            add_to_nums(new_nums, num * 2024, nums[num])
 
-all_stones = []
-previous_stone = None
-for stone in stones:
-    new_stone = Stone(stone)
-    if previous_stone:
-        previous_stone.next = new_stone
-    all_stones.append(new_stone)
-    previous_stone = new_stone
+    return new_nums
+            
 
+def main():
+    input = "8435 234 928434 14 0 7 92446 8992692"
+    # input = "125 17"
+    stones = [int(x) for x in input.split(" ")]
 
-first_stone = all_stones[0]
-for i in range(75):
-    blink(first_stone, i, len(all_stones))
+    nums = {}
 
-print(len(all_stones))
+    for stone in stones:
+        nums[stone] = 1
+
+    curr_length = len(stones)
+    for i in range(75):
+        nums = blink(nums)
+
+    answer = 0
+    for num in nums:
+        answer += nums[num]
+    print(answer)
+
+main()
