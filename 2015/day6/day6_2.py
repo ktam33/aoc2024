@@ -1,5 +1,10 @@
 import re
 
+def print_grid(grid):
+    for i in range(len(grid)):
+        print(''.join(grid[i]))
+
+
 with open("input.txt", "r") as file:
     lines = [line.strip() for line in file]
 
@@ -17,14 +22,12 @@ for line in lines:
     for i in range(point_a[0], point_b[0] + 1):
         for j in range(point_a[1], point_b[1] + 1):
             if operation == "turn on":
-                grid[i][j] = 1
+                grid[i][j] += 1
             elif operation == "turn off":
-                grid[i][j] = 0
+                if grid[i][j] > 0:
+                    grid[i][j] -= 1
             elif operation == "toggle":
-                if grid[i][j] == 0:
-                    grid[i][j] = 1
-                else:
-                    grid[i][j] = 0
+                grid[i][j] += 2
 
 print(sum([sum(line) for line in grid]))
 
