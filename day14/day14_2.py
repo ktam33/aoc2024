@@ -3,8 +3,22 @@ import re
 with open('input.txt', 'r') as file:
     lines = [line.strip() for line in file]
 
-
-
+def count_longest_x(line):
+    is_on_x = False
+    count = 0
+    longest = 0
+    for char in line:
+        if char == 'x':
+            count += 1
+            if longest < count:
+                longest = count
+            is_on_x = True
+        else:
+            if is_on_x:
+                is_on_x = False
+                count = 0
+    return longest
+            
 class Robot:
     def __init__(self, pos, vel):
         self.pos = pos
@@ -36,7 +50,6 @@ for i, line in enumerate(lines):
     robots[i] = Robot(pos, vel)
 
 i = 0
-filled_avg = (0, 0)
 while True:
     grid = []
     for _ in range(h):
@@ -44,23 +57,21 @@ while True:
     for robot in robots:
         pos = robots[robot].get_position_at_n(i, h, w)
         grid[pos[1]][pos[0]] = 'x'
+
+    x_limit = 10
+    should_show = False
+    for line in grid:
+        if count_longest_x(line) >= x_limit:
+            should_show = True
+            break
+    if should_show:
+        for line in grid:
+            print("".join(line))
+        print(i)
+        input()
+    if i % 1000 == 0:
+        print(i)
     i = i + 1
-    filled = 0
-    space_to_count = 15
-    for ii, line in enumerate(grid):
-        if ii < space_to_count:
-            filled += line.count('x')
 
-    if i > 50:
-        curr_percent = filled/filled_avg[1]
-        if curr_percent < 0.30 or curr_percent > 1.90:
-            for line in grid:
-                print("".join(line))
-            print(i)
-            input()
-        if i % 1000 == 0:
-            print(i)
-
-    filled_avg = (i, (filled_avg[0] * filled_avg[1] + filled)/i)
 
 
