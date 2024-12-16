@@ -21,7 +21,7 @@ def move(pos, dir, grid, h, w):
             return (pos[0], pos[1] + 1)
         elif next == '#':
             return pos
-        elif next == 'O':
+        elif next == '[' or next == ']':
             move_next = move((pos[0], pos[1] + 1), dir, grid, h, w)
             if move_next != (pos[0], pos[1] + 1):
                 grid[pos[0]][pos[1] + 1] = curr
@@ -37,7 +37,7 @@ def move(pos, dir, grid, h, w):
             return (pos[0], pos[1] - 1)
         elif next == '#':
             return pos
-        elif next == 'O':
+        elif next == '[' or next == ']':
             move_next = move((pos[0], pos[1] - 1), dir, grid, h, w)
             if move_next != (pos[0], pos[1] - 1):
                 grid[pos[0]][pos[1] - 1] = curr
@@ -47,14 +47,52 @@ def move(pos, dir, grid, h, w):
                 return pos
     elif dir == 'v':
         next = grid[pos[0] + 1][pos[1]]
-        if next == '.':
+        if next == '.' and curr == '@':
             grid[pos[0] + 1][pos[1]] = curr
             grid[pos[0]][pos[1]] = '.'
             return (pos[0] + 1, pos[1])
+        elif next == '.' and curr == '[':
+            if grid[pos[0] + 1][pos[1] + 1] == '.':
+                grid[pos[0]][pos[1]] = '.'
+                grid[pos[0] + 1][pos[1]] = '['
+                grid[pos[0]][pos[1] + 1] = '.'
+                grid[pos[0] + 1][pos[1] + 1] = ']'
+                return (pos[0] + 1, pos[1])
+            elif grid[pos[0] + 1][pos[1] + 1] == '#':
+                return pos
+            elif grid[pos[0] + 1][pos[1] + 1] == '[' or grid[pos[0] + 1][pos[1] + 1] == ']':
+                move_next = move((pos[0] + 1, pos[1] + 1), dir, grid, h, w)
+                if move_next != (pos[0] + 1, pos[1] + 1):
+                    grid[pos[0]][pos[1]] = '.'
+                    grid[pos[0] + 1][pos[1]] = '['
+                    grid[pos[0]][pos[1] + 1] = '.'
+                    grid[pos[0] + 1][pos[1] + 1] = ']'
+                    return (pos[0] + 1, pos[1])
+        elif next == '.' and curr == ']':
+            if grid[pos[0] + 1][pos[1] - 1] == '.':
+                grid[pos[0]][pos[1]] = '.'
+                grid[pos[0] + 1][pos[1]] = ']'
+                grid[pos[0]][pos[1] - 1] = '.'
+                grid[pos[0] + 1][pos[1] - 1] = '['
+                return (pos[0] + 1, pos[1])
+            elif grid[pos[0] + 1][pos[1] - 1] == '#':
+                return pos
+            elif grid[pos[0] + 1][pos[1] - 1] == '[' or grid[pos[0] + 1][pos[1] - 1] == ']':
+                move_next = move((pos[0] + 1, pos[1] - 1), dir, grid, h, w)
+                if move_next != (pos[0] + 1, pos[1] - 1):
+                    grid[pos[0]][pos[1]] = '.'
+                    grid[pos[0] + 1][pos[1]] = '['
+                    grid[pos[0]][pos[1] - 1] = '.'
+                    grid[pos[0] + 1][pos[1] - 1] = ']'
+                    return (pos[0] + 1, pos[1])
         elif next == '#':
             return pos
-        elif next == 'O':
+        elif next == '[' or next == ']':
             move_next = move((pos[0] + 1, pos[1]), dir, grid, h, w)
+            if next == '[':
+                move((pos[0] + 1, pos[1] + 1), dir, grid, h, w)
+            if next == ']':
+                move((pos[0] + 1, pos[1] - 1), dir, grid, h, w)
             if move_next != (pos[0] + 1, pos[1]):
                 grid[pos[0] + 1][pos[1]] = curr
                 grid[pos[0]][pos[1]] = '.'
@@ -63,14 +101,52 @@ def move(pos, dir, grid, h, w):
                 return pos
     elif dir == '^':
         next = grid[pos[0] - 1][pos[1]]
-        if next == '.':
+        if next == '.' and curr == '@':
             grid[pos[0] - 1][pos[1]] = curr
             grid[pos[0]][pos[1]] = '.'
             return (pos[0] - 1, pos[1])
+        elif next == '.' and curr == '[':
+            if grid[pos[0] - 1][pos[1] + 1] == '.':
+                grid[pos[0]][pos[1]] = '.'
+                grid[pos[0] - 1][pos[1]] = '['
+                grid[pos[0]][pos[1] + 1] = '.'
+                grid[pos[0] - 1][pos[1] + 1] = ']'
+                return (pos[0] + 1, pos[1])
+            elif grid[pos[0] - 1][pos[1] + 1] == '#':
+                return pos
+            elif grid[pos[0] - 1][pos[1] + 1] == '[' or grid[pos[0] - 1][pos[1] + 1] == ']':
+                move_next = move((pos[0] - 1, pos[1] + 1), dir, grid, h, w)
+                if move_next != (pos[0] - 1, pos[1] + 1):
+                    grid[pos[0]][pos[1]] = '.'
+                    grid[pos[0] - 1][pos[1]] = '['
+                    grid[pos[0]][pos[1] + 1] = '.'
+                    grid[pos[0] - 1][pos[1] + 1] = ']'
+                    return (pos[0] - 1, pos[1])
+        elif next == '.' and curr == ']':
+            if grid[pos[0] - 1][pos[1] - 1] == '.':
+                grid[pos[0]][pos[1]] = '.'
+                grid[pos[0] - 1][pos[1]] = ']'
+                grid[pos[0]][pos[1] - 1] = '.'
+                grid[pos[0] - 1][pos[1] - 1] = '['
+                return (pos[0] - 1, pos[1])
+            elif grid[pos[0] - 1][pos[1] - 1] == '#':
+                return pos
+            elif grid[pos[0] - 1][pos[1] - 1] == '[' or grid[pos[0] - 1][pos[1] - 1] == ']':
+                move_next = move((pos[0] - 1, pos[1] - 1), dir, grid, h, w)
+                if move_next != (pos[0] - 1, pos[1] - 1):
+                    grid[pos[0]][pos[1]] = '.'
+                    grid[pos[0] - 1][pos[1]] = '['
+                    grid[pos[0]][pos[1] - 1] = '.'
+                    grid[pos[0] - 1][pos[1] - 1] = ']'
+                    return (pos[0] - 1, pos[1])
         elif next == '#':
             return pos
-        elif next == 'O':
+        elif next == '[' or next == ']':
             move_next = move((pos[0] - 1, pos[1]), dir, grid, h, w)
+            if next == '[':
+                move((pos[0] - 1, pos[1] + 1), dir, grid, h, w)
+            if next == ']':
+                move((pos[0] - 1, pos[1] - 1), dir, grid, h, w)
             if move_next != (pos[0] - 1, pos[1]):
                 grid[pos[0] - 1][pos[1]] = curr
                 grid[pos[0]][pos[1]] = '.'
@@ -99,15 +175,18 @@ input_lines = []
 for i in range(h + 1, len(lines)):
     input_lines.append(lines[i].strip())
 
-input = "".join(input_lines)
+inputs = "".join(input_lines)
 
-# for char in input:
-#     robot = move(robot, char, grid, h, w)
+print_grid(grid)
+for char in inputs:
+    robot = move(robot, char, grid, h, w)
+    print_grid(grid)
+    input()
 
 answer = 0
 for i in range(h):
     for j in range(w):
-        if grid[i][j] == 'O':
+        if grid[i][j] == '[':
             answer += 100 * i + j
 
 print_grid(grid)

@@ -21,7 +21,7 @@ def move(pos, dir, grid, h, w):
             return (pos[0], pos[1] + 1)
         elif next == '#':
             return pos
-        elif next == ']' or next == '[':
+        elif next == 'O':
             move_next = move((pos[0], pos[1] + 1), dir, grid, h, w)
             if move_next != (pos[0], pos[1] + 1):
                 grid[pos[0]][pos[1] + 1] = curr
@@ -37,7 +37,7 @@ def move(pos, dir, grid, h, w):
             return (pos[0], pos[1] - 1)
         elif next == '#':
             return pos
-        elif next == ']' or next == '[':
+        elif next == 'O':
             move_next = move((pos[0], pos[1] - 1), dir, grid, h, w)
             if move_next != (pos[0], pos[1] - 1):
                 grid[pos[0]][pos[1] - 1] = curr
