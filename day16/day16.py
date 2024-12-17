@@ -11,6 +11,8 @@ class Node:
     def __init__(self, pos, label):
         self.pos = pos
         self.label = label
+        self.dist = 1_000_000
+        self.prev_pos = None
 
     def __eq__(self, other):
         if not isinstance(other, Node):
