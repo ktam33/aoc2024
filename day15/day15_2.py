@@ -21,13 +21,13 @@ def move(pos, dir, grid, h, w, do_move = True):
         return pos
     if dir == '>':
         return move_horizontally(pos, dir, grid)
-    elif dir == '<': 
+    elif dir == '<':
         return move_horizontally(pos, dir, grid)
     elif dir == 'v':
         return move_vertically(pos, dir, grid)
     elif dir == '^':
         return move_vertically(pos, dir, grid)
-            
+
 def move_horizontally(pos, dir, grid):
     next_pos = get_next(pos, dir)
     next = grid[next_pos[0]][next_pos[1]]
@@ -41,7 +41,7 @@ def move_horizontally(pos, dir, grid):
             return make_move(pos, dir, grid)
         else:
             return pos
-            
+
 def move_vertically(pos, dir, grid):
     next_pos = get_next(pos, dir)
     next = grid[next_pos[0]][next_pos[1]]
@@ -61,7 +61,7 @@ def move_vertically(pos, dir, grid):
             return make_move(pos, dir, grid)
         else:
             return pos
-        
+
 def make_move(pos, dir, grid):
     curr = grid[pos[0]][pos[1]]
     new_pos = get_next(pos, dir)
