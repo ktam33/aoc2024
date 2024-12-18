@@ -9,7 +9,7 @@ class Node:
     def __init__(self, pos, grid):
         self.pos = pos
         self.dist = 1_000_000
-        self.prev_pos = None
+        self.prev_pos = []
         self.neighbors = {}
         # don't add a neighbor that faces the opposite direction because
         # that is where we just came from
@@ -35,7 +35,7 @@ class Node:
         return self.pos == other.pos and self.dir == other.dir
 
     def __hash__(self):
-        return hash((self.pos, self.dir))
+        return hash(self.pos)
 
 for i, line in enumerate(lines):
     for j, char in enumerate(line):
@@ -52,7 +52,8 @@ for i, line in enumerate(lines):
             unvisited[(i, j, 'v')] = Node((i, j, 'v'), lines)
 
 goal_reached = False
-while(not goal_reached):
+while not goal_reached:
+# while(len(unvisited) > 0):
     curr = None
     for key in unvisited:
         if curr == None or unvisited[key].dist < curr.dist:
@@ -62,21 +63,30 @@ while(not goal_reached):
         dist = curr.neighbors[pos] + curr.dist
         if pos in unvisited:
             neighbor_node = unvisited[pos] 
-            if neighbor_node.dist > dist:
+            if neighbor_node.dist >= dist:
                 neighbor_node.dist = dist
-                neighbor_node.previous_pos = curr.pos
+                neighbor_node.prev_pos.append(curr.pos)
                 if (pos[0], pos[1]) == goal:
                     goal_node = neighbor_node
                     goal_reached = True   
 
     visited[curr.pos] = curr
     del unvisited[curr.pos]
-    if len(unvisited) == 0:
-        print('no more unvisited nodes')
-        break
+
 
 print(goal_node.dist)
 
-    
+def get_path_nodes(node, path_nodes, visited):
+    path_nodes.add((node.pos[0], node.pos[1]))
+    for pos in node.prev_pos:
+        get_path_nodes(visited[pos], path_nodes, visited)
+
+path_nodes = set()
+get_path_nodes(goal_node, path_nodes, visited)
+print(len(path_nodes))
+
+
+
+
         
 
