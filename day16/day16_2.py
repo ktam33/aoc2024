@@ -84,9 +84,3 @@ def get_path_nodes(node, path_nodes, visited):
 path_nodes = set()
 get_path_nodes(goal_node, path_nodes, visited)
 print(len(path_nodes))
-
-
-
-
-        
-
