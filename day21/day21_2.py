@@ -1,5 +1,4 @@
 import functools
-import sys
 #  +---+---+---+
 #  | 7 | 8 | 9 |
 #  +---+---+---+
@@ -15,29 +14,6 @@ import sys
 #  +---+---+---+
 #  | < | v | > |
 #  +---+---+---+
-
-dir_costs = {
-    '<v': 1,
-    '<>': 2,
-    '<^': 2,
-    '<A': 3,
-    'v<': 1,
-    'v>': 1,
-    'v^': 1,
-    'vA': 2,
-    '><': 2,
-    '>v': 1,
-    '>^': 2,
-    '>A': 1,
-    '^<': 2,
-    '^v': 1,
-    '^>': 2,
-    '^A': 1,
-    'A^': 1,
-    'Av': 2,
-    'A>': 1,
-    'A<': 3,
-}
 
 numpad = {
     '7': (0,0), 
@@ -65,7 +41,6 @@ dirpad = {
 with open('input.txt', 'r') as file:
     combos = [line.strip() for line in file]
 
-# @functools.cache
 def get_path(start, end, hole):
     if start == end:
         return 'A'
@@ -77,20 +52,13 @@ def get_path(start, end, hole):
 
     j_first = j_move + i_move + 'A'
     i_first = i_move + j_move + 'A'
-    i_cost = get_path_cost('A' + i_first)
-    j_cost = get_path_cost('A' + j_first)
     if start[1] == hole[1] and end[0] == hole[0]:
         return set([j_first])
     elif start[0] == hole[0] and end[1] == hole[1]:
         return set([i_first])
-    elif i_cost > j_cost:
-        return set([j_first])
-    elif i_cost < j_cost:
-        return set([i_first])
     else:
         return set([i_first, j_first])
 
-# @functools.cache
 def get_num_path(combo):
     hole = numpad['X']
     prev_paths = set()
@@ -108,15 +76,6 @@ def get_num_path(combo):
 
     return prev_paths
 
-# @functools.cache
-def get_path_cost(path):
-    cost = 0
-    for i in range(len(path) - 1):
-        if path[i] == path[i + 1]:
-            continue
-        cost += dir_costs[path[i:i + 2]]
-    return cost
-
 @functools.cache
 def get_len(step, depth):
     if depth == 1:
@@ -131,20 +90,9 @@ def get_len(step, depth):
             total_len += get_len(path[i:i + 2], depth - 1)
         if min_len is None:
             min_len = total_len
-        elif min_len < min_len:
-            min_len = min_len
+        elif total_len < min_len:
+            min_len = total_len
     return min_len
-
-# depth = 3
-# path = '<A'
-# path = 'A' + path 
-# total_len = 0
-# for i in range(len(path) - 1):
-#     if i == 0:
-#         total_len += get_len(path[i:i + 2], depth, True)
-#     else:
-#         total_len += get_len(path[i:i + 2], depth, False)
-# print(total_len)
 
 def main():
     answer = 0
@@ -165,18 +113,4 @@ def main():
 
     return answer
 
-answers = set()
-for _ in range(100):
-    get_len.cache_clear()
-    answers.add(main())
-
-print(answers)
-
-# something is not deterministic about this code
-# 553169641721162
-# 392516830592554
-# 518091415098120
-# 395311899975222
-# 300043033609508
-# 423077565661650
-# 263492840501566 (this was the answer)
+print(main())
