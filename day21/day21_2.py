@@ -1,4 +1,5 @@
 import functools
+import sys
 #  +---+---+---+
 #  | 7 | 8 | 9 |
 #  +---+---+---+
@@ -64,8 +65,10 @@ dirpad = {
 with open('input.txt', 'r') as file:
     combos = [line.strip() for line in file]
 
-@functools.cache
+# @functools.cache
 def get_path(start, end, hole):
+    if start == end:
+        return 'A'
     i_move = 'v' if end[0] > start[0] else '^'
     j_move = '>' if end[1] > start[1] else '<'
 
@@ -87,7 +90,7 @@ def get_path(start, end, hole):
     else:
         return set([i_first, j_first])
 
-@functools.cache
+# @functools.cache
 def get_num_path(combo):
     hole = numpad['X']
     prev_paths = set()
@@ -105,25 +108,7 @@ def get_num_path(combo):
 
     return prev_paths
 
-@functools.cache
-def get_dir_path(combo):
-    hole = dirpad['X']
-    prev_paths = set()
-    combo = 'A' + combo
-    for i in range(len(combo) - 1):
-        new_paths = set()
-        new_sections = get_path(dirpad[combo[i]], dirpad[combo[i + 1]], hole)
-        if len(prev_paths) == 0:
-            new_paths = new_sections
-        else:
-            for path in prev_paths:
-                for section in new_sections:
-                    new_paths.add(path + section)
-        prev_paths = new_paths
-
-    return prev_paths
-
-@functools.cache
+# @functools.cache
 def get_path_cost(path):
     cost = 0
     for i in range(len(path) - 1):
@@ -132,57 +117,66 @@ def get_path_cost(path):
         cost += dir_costs[path[i:i + 2]]
     return cost
 
-def prune_paths(paths):
-    print(f'starting number of paths: {len(paths)}')
-    path_costs = {}
-    min_cost = None
-    # min_path = None
+@functools.cache
+def get_len(step, depth):
+    if depth == 1:
+        return 1
+    min_len = None
+    hole = dirpad['X']
+    paths = get_path(dirpad[step[0]], dirpad[step[1]], hole)
+    paths = ['A' + path for path in paths]
     for path in paths:
-        cost = get_path_cost(path)
-        path_costs[path] = cost
-        if min_cost == None:
-            min_cost = cost
-            # min_path = path
-        elif cost < min_cost:
-            min_cost = cost
-            # min_path = path
-    pruned_paths = [path for path in path_costs if path_costs[path] == min_cost]
-    # pruned_paths = [min_path]
-    print(f'ending number of paths: {len(pruned_paths)}')
-    return pruned_paths
+        total_len = 0
+        for i in range(len(path) - 1):
+            total_len += get_len(path[i:i + 2], depth - 1)
+        if min_len is None:
+            min_len = total_len
+        elif min_len < min_len:
+            min_len = min_len
+    return min_len
 
-# def get_cost(step, depth):
-#     return 1
+# depth = 3
+# path = '<A'
+# path = 'A' + path 
+# total_len = 0
+# for i in range(len(path) - 1):
+#     if i == 0:
+#         total_len += get_len(path[i:i + 2], depth, True)
+#     else:
+#         total_len += get_len(path[i:i + 2], depth, False)
+# print(total_len)
 
-
-answer = 0
-for combo in combos:
-    paths = get_num_path(combo)
-    paths = prune_paths(paths)
-    print(combo)
-    print(paths)
-
-    # for path in paths:
-
-
-    for _ in range(2):
-        new_paths = set()
+def main():
+    answer = 0
+    depth = 26
+    for combo in combos:
+        paths = get_num_path(combo)
+        min_len = None
         for path in paths:
-            new_paths.update(get_dir_path(path))
-        paths = new_paths
-        paths = prune_paths(paths)
+            path = 'A' + path
+            total_len = 0
+            for i in range(len(path) - 1):
+                total_len += get_len(path[i:i + 2], depth)
+            if min_len is None:
+                min_len = total_len
+            elif total_len < min_len:
+                min_len = total_len
+        answer += min_len * int(combo[0:3])
 
-    last_lengths = set()
-    a_counts = set()
-    for path in paths:
-        last_lengths.add(len(path))
-        a_counts.add(path.count('A'))
+    return answer
 
-    answer += min(last_lengths) * int(combo[0:3])
+answers = set()
+for _ in range(100):
+    get_len.cache_clear()
+    answers.add(main())
 
-print(answer)
+print(answers)
 
-
-
-
-
+# something is not deterministic about this code
+# 553169641721162
+# 392516830592554
+# 518091415098120
+# 395311899975222
+# 300043033609508
+# 423077565661650
+# 263492840501566 (this was the answer)
