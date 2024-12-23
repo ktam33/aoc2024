@@ -13,7 +13,7 @@ def get_combo(operand, registers):
         raise Exception('combo operand 7 not implemented')
 
 
-with open('test_input_2.txt', 'r') as file:
+with open('input.txt', 'r') as file:
     lines = [line.strip() for line in file]
 
 registers = {}
