@@ -1,3 +1,4 @@
+from tqdm import tqdm
 class Comp: 
     def __init__(self, label):
         self.label = label
@@ -14,35 +15,27 @@ class Comp:
     def __repr__(self):
         return self.label
     
-def find_longest_cycle(start, current, length, path, visited, cycle_length, longest_cycle):
-    unvisited = current.connected.difference(visited)
-    path.append(current)
-    visited.append(current)
+def find_largest_network(comp, network, visited):
+    visited = visited.copy()
+    visited.add(comp)
+    if all([c in comp.connected for c in network]): 
+        network = network.copy()
+        network.add(comp)
+    unvisited = comp.connected.difference(visited)
     if len(unvisited) == 0:
-        return (cycle_length, longest_cycle)
-    else:
-        potential_cycles = []
-        if start in unvisited:
-            cycle_length = length + 1
-            longest_cycle = path.copy().append(start)
-        for comp in unvisited:
-            if comp != start:
-                path_copy = path.copy()
-                path_copy.append(comp)
-                visited_copy = visited.copy()
-                visited_copy.append(comp)
-                potential_cycles.append(find_longest_cycle(start, comp, length + 1, path_copy, visited_copy, cycle_length, longest_cycle))
-        max_length = 0
-        max_cycle_path = None
-        for cycle in potential_cycles:
-            if cycle[0] is not None and cycle[0] > max_length:
-                max_length = cycle[0]
-                max_cycle_path = cycle[1]
-        return (max_length, max_cycle_path)
+        return (network, visited)
+    
+    max_network = None
+    max_length = 0
+    for next in unvisited:
+        result = find_largest_network(next, network, visited)
+        visited.update(result[1])
+        if len(result[0]) > max_length:
+            max_network = result[0]
+            max_length = len(result[0])
+    return (max_network, visited)
 
-
-
-with open('test_input.txt', 'r') as file:
+with open('input.txt', 'r') as file:
     lines = [line.strip() for line in file]
     
 comps = {}
@@ -60,7 +53,11 @@ for line in lines:
     a.connected.add(b)
     b.connected.add(a)
 
-
-current = comps[Comp('ka')]
-asdf = find_longest_cycle(current, current, 0, [], [], None, None)
-pass
+max_network = None
+max_length = 0
+for comp in tqdm(comps):
+    result = find_largest_network(comp, set([comp]), set([comp]))
+    if len(result[0]) > max_length:
+        max_length = len(result[0])
+        max_network = result[0]
+print(','.join(sorted([c.label for c in max_network])))
