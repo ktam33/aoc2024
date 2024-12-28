@@ -39,61 +39,78 @@ def do_operation(x, op, y):
     if op == 'XOR':
         return x ^ y
     
-def find_adder_wires(wire_num, wires, connected, show_results = True):
+def find_adder_wires(wire_num, wires, connected):
     wire_re = rf'[xyz]{wire_num}'
     for key in wires:
         wire = wires[key]
         if not wire.is_input() and (re.match(wire_re, wire.x) or re.match(wire_re, wire.y)):
             connected.add(wire)
             if wire_num != '00':
-                connected.update(find_wire_with_input(wire.output, wires))
+                connected.update(find_wires_with_input(wire.output, wires))
         elif re.match(wire_re, wire.output):
             connected.add(wire)
     
-    c_out_dest = None
     c_out = None
     for c in connected:
         if c.op == 'OR':
             c_out = c
-            c_out_dest = list(find_wire_with_input(c.output, wires, 'XOR'))
-
-    if (
-        c_out_dest is not None and (
-            len(c_out_dest) != 1 or c_out_dest[0].output != f'z{(int(wire_num) + 1):02}'
-        ) and
-        wire_num != '44' and wire_num != '45'
-    ):
-        print('\n### ' + wire_num + ' ###\n')
-        for c in connected:
-            print(c)
-        print(f'c_out: {c_out}')
-        print(f'c_out destination: {c_out_dest}')
+            break
     
-    print('\n### ' + wire_num + ' ###\n')
-    for c in connected:
-        print(c)
-    print(f'c_out: {c_out}')
-    print(f'c_out destination: {c_out_dest}')
+    # print('\n### ' + wire_num + ' ###\n')
+    # for c in connected:
+    #     print(c)
+    # print(f'c_out: {c_out}')
 
-def find_wire_with_input(input, wires, op = None):
-    candidates = set()
+    c_out_key = None
+    if c_out is not None:
+        c_out_key = c_out.output
+    return connected, c_out_key
+
+def validate_full_adder(wire_num, adder_wires, c_in):
+    # Find XOR of x and y and track output as xy_xor
+    # Find XOR of c_in AND xy_xor that outputs into z
+    # Find AND of x and y and track output as xy_and
+    # Find AND of c_in and xy_xor and track output as cxy_and
+    # Find OR of cxy_and and xy_and and track output as c_out
+    misplaced = []
+    xy_xor = find_wire_with_inputs(f'x{wire_num}', f'y{wire_num}', 'XOR', adder_wires)
+    z_wire = find_wire_with_input(c_in, 'XOR', adder_wires)
+    if z_wire.output != f'z{wire_num}':
+        misplaced.append((z_wire.output, f'z{wire_num}'))
+    if z_wire.x == c_in and z_wire.y != xy_xor.output:
+        misplaced.append((xy_xor.output, z_wire.y)) 
+    elif z_wire.y == c_in and z_wire.x != xy_xor.output:
+        misplaced.append((xy_xor.output, z_wire.x))    
+    
+    return misplaced
+
+def find_wire_with_inputs(x, y, op, wires):
+    for wire in wires:
+        if (
+            ((wire.x == x and wire.y == y) or
+            (wire.x == y and wire.y == x)) and
+            wire.op == op
+        ):
+            return wire
+        
+def find_wire_with_input(x, op, wires):
+    for wire in wires:
+        if (
+            (wire.x == x or wire.y == x) and
+            wire.op == op
+        ):
+            return wire
+
+def find_wires_with_input(input, wires, op = None):
+    candidates = []
     for key in wires:
         wire = wires[key]
         if wire.x == input or wire.y == input:
             if op == None:
-                candidates.add(wire)
+                candidates.append(wire)
             elif op == wire.op:
-                candidates.add(wire)
+                candidates.append(wire)
     return candidates
-
-
-
-def get_combinations(seq):
-    combinations = set()
-    for i in range(0,len(seq)):
-        for j in range(i+1,len(seq)):
-            combinations.add((seq[i],seq[j]))
-    return combinations
 
 def calc_wires(wires):
     not_done = {k: v for k, v in wires.items() if v.value is None}
@@ -170,7 +187,7 @@ def reset_wires(wires):
         if not wires[wire].is_input():
             wires[wire].value = None
 
-def swap_wires(swap, wires):
+def swap_wires(swap, wires):    
     wire_1 = wires[swap[0]]
     wire_2 = wires[swap[1]]
     wire_1.output = swap[1]
@@ -178,10 +195,8 @@ def swap_wires(swap, wires):
     wires[swap[0]] = wire_2
     wires[swap[1]] = wire_1
     
-
 with open("input.txt", "r") as file:
     lines = [line.strip() for line in file]
-
 
 wires = {}
 
@@ -195,19 +210,27 @@ for line in lines[lines.index('') + 1:]:
     match = re.match(r'(\w{3}) (AND|XOR|OR) (\w{3}) -> (\w{3})', line)
     wires[match.group(4)] = Wire(match.group(4), match.group(1), match.group(3), match.group(2))
 
-# Solved by printing out wires for each bit's adder circuit and manually 
-# figuring out the swaps to untangle things. 
-# TODO: figure out logic to solve this
-# swaps = [('z09', 'gwh'), ('z21', 'rcb'), ('jct', 'z39'), ('wbw', 'wgb')]
-# for swap in swaps:
-#     swap_wires(swap, wires)
-
-for i in range(46):
-    find_adder_wires(f'{i:02}', wires, set())
+all_swaps = []
+i = 0
+while i < 45:
+    c_in = find_wire_with_inputs('x00', 'y00', 'AND', wires.values()).output
+    for i in range(46):
+        wire_num = f'{i:02}'
+        adder_wires = find_adder_wires(wire_num, wires, set())
+        
+        if i > 0 and i < 45:
+            swaps = validate_full_adder(wire_num, adder_wires[0], c_in)
+            if len(swaps) == 0:
+                c_in = adder_wires[1]
+            else:
+                all_swaps.extend(swaps)
+                for swap in swaps:
+                    swap_wires(swap, wires)
+                break
 
 results = get_test_results(wires)
 print(results)
-
-swaps_flattened = [item for swap in swaps for item in swap]
+print(all_swaps)
+swaps_flattened = [item for swap in all_swaps for item in swap]
 swaps_flattened.sort()
-print(','.join(swaps_flattened))
+print(','.join(swaps_flattened))  
