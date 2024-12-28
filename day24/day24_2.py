@@ -9,8 +9,27 @@ class Wire:
         self.op = op
         self.value = None
 
+    def __repr__(self):
+        if self.is_input():
+            return f'{self.output} = {self.value}'
+        else:
+            return f'{self.x} {self.op} {self.y} -> {self.output}'
+
     def is_input(self):
         return self.op is None
+    
+    def __hash__(self):
+        return hash((self.output, self.x, self.op, self.y))
+    
+    def __eq__(self, value):
+        if not isinstance(value, Wire):
+            return False
+        return (
+            self.output == value.output and 
+            self.x == value.x and 
+            self.y == value.y and 
+            self.op == value.op
+        )
 
 def do_operation(x, op, y):
     if op == 'AND':
@@ -20,6 +39,55 @@ def do_operation(x, op, y):
     if op == 'XOR':
         return x ^ y
     
+def find_adder_wires(wire_num, wires, connected, show_results = True):
+    wire_re = rf'[xyz]{wire_num}'
+    for key in wires:
+        wire = wires[key]
+        if not wire.is_input() and (re.match(wire_re, wire.x) or re.match(wire_re, wire.y)):
+            connected.add(wire)
+            if wire_num != '00':
+                connected.update(find_wire_with_input(wire.output, wires))
+        elif re.match(wire_re, wire.output):
+            connected.add(wire)
+    
+    c_out_dest = None
+    c_out = None
+    for c in connected:
+        if c.op == 'OR':
+            c_out = c
+            c_out_dest = list(find_wire_with_input(c.output, wires, 'XOR'))
+
+    if (
+        c_out_dest is not None and (
+            len(c_out_dest) != 1 or c_out_dest[0].output != f'z{(int(wire_num) + 1):02}'
+        ) and
+        wire_num != '44' and wire_num != '45'
+    ):
+        print('\n### ' + wire_num + ' ###\n')
+        for c in connected:
+            print(c)
+        print(f'c_out: {c_out}')
+        print(f'c_out destination: {c_out_dest}')
+    
+    print('\n### ' + wire_num + ' ###\n')
+    for c in connected:
+        print(c)
+    print(f'c_out: {c_out}')
+    print(f'c_out destination: {c_out_dest}')
+
+def find_wire_with_input(input, wires, op = None):
+    candidates = set()
+    for key in wires:
+        wire = wires[key]
+        if wire.x == input or wire.y == input:
+            if op == None:
+                candidates.add(wire)
+            elif op == wire.op:
+                candidates.add(wire)
+    return candidates
+
+
+
 def get_combinations(seq):
     combinations = set()
     for i in range(0,len(seq)):
@@ -127,62 +195,19 @@ for line in lines[lines.index('') + 1:]:
     match = re.match(r'(\w{3}) (AND|XOR|OR) (\w{3}) -> (\w{3})', line)
     wires[match.group(4)] = Wire(match.group(4), match.group(1), match.group(3), match.group(2))
 
-swaps = set()
-wires_to_swap = {k: v for k, v in wires.items() if not v.is_input()}
-swaps = get_combinations(list(wires_to_swap.keys()))
-x = get_value_for('x', wires)[1]
-y = get_value_for('y', wires)[1]
-expected  = get_bin_string(x + y, 46)
-
-
-
-best_positions = get_test_results(wires)
-
-# test
-# reset_wires(wires)
-# test_swaps = {('z34', 'rcb'), ('z38', 'z21'), ('z38', 'z45'), ('z34', 'z13')}
-# for swap in test_swaps:
+# Solved by printing out wires for each bit's adder circuit and manually 
+# figuring out the swaps to untangle things. 
+# TODO: figure out logic to solve this
+# swaps = [('z09', 'gwh'), ('z21', 'rcb'), ('jct', 'z39'), ('wbw', 'wgb')]
+# for swap in swaps:
 #     swap_wires(swap, wires)
 
-# calc_wires(wires)
-# test_mistake = find_first_mistake(expected, get_value_for('z', wires)[0])
-#end test
+for i in range(46):
+    find_adder_wires(f'{i:02}', wires, set())
 
+results = get_test_results(wires)
+print(results)
 
-best_swaps = set()
-while(any(x != -1 for x in best_positions)):
-    for swap in best_swaps:
-        swap_wires(swap, wires)
-
-    best_swap = None
-    current_best_positions = best_positions
-    for swap in tqdm(swaps.difference(best_swaps)):
-        reset_wires(wires)
-        swap_wires(swap, wires)
-        
-        new_positions = get_test_results(wires)
-        if (
-            all(x != None for x in new_positions) and (
-                new_positions[0] > current_best_positions[0] or
-                new_positions[1] > current_best_positions[1] or
-                new_positions[2] > current_best_positions[2]
-            )
-        ):
-            current_best_positions = new_positions
-            best_swap = swap
-        elif all(x != None and x == -1 for x in new_positions):
-            current_best_positions = new_positions
-            best_swap = swap
-            break
-        swap_wires(swap, wires)
-    for swap in best_swaps:
-        swap_wires(swap, wires)
-    best_positions = current_best_positions
-    if best_swap is None:
-        raise Exception('no new swap found')
-    best_swaps.add(best_swap)
-    print(best_swaps)
-    print(best_positions)
-    # print(first_mistake)
-    # print(swap)
-print(best_swaps)
+swaps_flattened = [item for swap in swaps for item in swap]
+swaps_flattened.sort()
+print(','.join(swaps_flattened))
