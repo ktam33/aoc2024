@@ -67,22 +67,25 @@ def find_adder_wires(wire_num, wires, connected):
     return connected, c_out_key
 
 def validate_full_adder(wire_num, adder_wires, c_in):
+    # Implemented:
     # Find XOR of x and y and track output as xy_xor
     # Find XOR of c_in AND xy_xor that outputs into z
+    # Not Needed: 
     # Find AND of x and y and track output as xy_and
     # Find AND of c_in and xy_xor and track output as cxy_and
     # Find OR of cxy_and and xy_and and track output as c_out
-    misplaced = []
+    #
+    # Only the first two validations were implemennted as they were all
+    # that were required to solve the puzzle
     xy_xor = find_wire_with_inputs(f'x{wire_num}', f'y{wire_num}', 'XOR', adder_wires)
     z_wire = find_wire_with_input(c_in, 'XOR', adder_wires)
     if z_wire.output != f'z{wire_num}':
-        misplaced.append((z_wire.output, f'z{wire_num}'))
+        return z_wire.output, f'z{wire_num}'
     if z_wire.x == c_in and z_wire.y != xy_xor.output:
-        misplaced.append((xy_xor.output, z_wire.y)) 
+        return (xy_xor.output, z_wire.y)
     elif z_wire.y == c_in and z_wire.x != xy_xor.output:
-        misplaced.append((xy_xor.output, z_wire.x))    
-    
-    return misplaced
+        return (xy_xor.output, z_wire.x)
+    return None
 
 def find_wire_with_inputs(x, y, op, wires):
     for wire in wires:
@@ -219,13 +222,12 @@ while i < 45:
         adder_wires = find_adder_wires(wire_num, wires, set())
         
         if i > 0 and i < 45:
-            swaps = validate_full_adder(wire_num, adder_wires[0], c_in)
-            if len(swaps) == 0:
+            swap = validate_full_adder(wire_num, adder_wires[0], c_in)
+            if swap is None:
                 c_in = adder_wires[1]
             else:
-                all_swaps.extend(swaps)
-                for swap in swaps:
-                    swap_wires(swap, wires)
+                all_swaps.append(swap)
+                swap_wires(swap, wires)
                 break
 
 results = get_test_results(wires)
